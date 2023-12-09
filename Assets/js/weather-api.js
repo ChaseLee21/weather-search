@@ -4,12 +4,24 @@ const apiURL = "https://api.openweathermap.org/data/2.5/forecast/"
 
 const city = "";
 
+const query = apiURL + "q=" + city + "&appid=" + apikey;
+
 const cityInput = document.getElementById("city");
 
 const searchBtn = document.getElementById("search");
 
 searchBtn.addEventListener("click", function (event) {
     event.preventDefault();
-    console.log(cityInput.value);
-    console.log("clicked");
+    getWeather();
 });
+
+function getWeather() {
+    fetch(query)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            console.log(data);
+        });
+}
+
