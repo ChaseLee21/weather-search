@@ -5,6 +5,7 @@ const apiURL = "https://api.openweathermap.org/data/2.5/forecast"
 //html variables
 const cityInput = document.getElementById("city");
 const searchBtn = document.getElementById("search");
+const forecastDisplay = document.getElementById("forecastDisplay");
 
 //query variables
 let city = "";
@@ -13,10 +14,14 @@ let query = apiURL + "?q=" + city + "&appid=" + apikey;
 //api data variables
 let days = [[], [], [], [], []];
 
-searchBtn.addEventListener("click", function (event) {
+searchBtn.addEventListener("click", async function (event) {
     event.preventDefault();
     query = setQuery();
-    getWeather();
+    await getWeather();
+    displayForecast();
+    document.getElementById("cityName").innerHTML = cityInput.value.trim();
+    saveSearch(cityInput.value.trim());
+    displayRecentSearches();
 });
 
 function setQuery() {
@@ -24,9 +29,9 @@ function setQuery() {
     return apiURL + "?q=" + city + "&appid=" + apikey + "&units=imperial";
 }
 
-function getWeather() {
+async function getWeather() {
     console.log(query);
-    fetch(query)
+    await fetch(query)
         .then(function (response) {
             return response.json();
         })
@@ -48,9 +53,8 @@ function getWeather() {
                     dayCount++;
                 }
             }
-            console.log(days);
         });
-}
+    }
 
 // seperates a date and time string into a variable that holds the day and the time
 function createDateObject(dateString) {
@@ -65,3 +69,95 @@ function createDateObject(dateString) {
         time : time
     };
 }
+
+function displayRecentSearches() {
+    let recentSearches = JSON.parse(localStorage.getItem("recentSearches"));
+    let recentSearchesContainer = document.getElementById("recentSearches");
+    recentSearchesContainer.innerHTML = "";
+    if (recentSearches) {
+        recentSearches.forEach(search => {
+            let searchEl = document.createElement("button");
+            searchEl.setAttribute("class", "btn btn-secondary m-1");
+            searchEl.textContent = search;
+            searchEl.addEventListener("click", async function (event) {
+                event.preventDefault();
+                cityInput.value = search;
+                query = setQuery();
+                await getWeather();
+                displayForecast();
+                document.getElementById("cityName").innerHTML = cityInput.value.trim();
+            });
+            recentSearchesContainer.appendChild(searchEl);
+        });
+    }
+}
+
+function saveSearch(search) {
+    let recentSearches = JSON.parse(localStorage.getItem("recentSearches"));
+    if (!recentSearches) {
+        recentSearches = [];
+    } 
+    if (!recentSearches.includes(search)) {
+        recentSearches.push(search);
+    }
+    localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+}
+
+function displayForecast() {
+    console.log(days);
+    // clear the forecast display
+    forecastDisplay.innerHTML = "";
+    days.forEach(day => {
+        // get the information we need from the day
+        let maxTemp = Math.floor(getMax(day)); 
+        let minTemp = Math.floor(getMin(day));
+        let date = createDateObject(day[0].dt_txt).day;
+        let icon = day[0].weather[0].icon;
+        let iconURL = "http://openweathermap.org/img/w/" + icon + ".png";
+        let wind = getWind(day);
+        let humidity = getHumidity(day);
+        console.log(minTemp, maxTemp, date, iconURL, wind, humidity);
+
+        //creating the elements to display the data
+        let dayContainer = document.createElement("div");
+        dayContainer.setAttribute("class", "card m-2 p-2");
+        let dayHeader = document.createElement("h3");
+        dayHeader.textContent = date;
+        let dayIcon = document.createElement("img");
+        dayIcon.setAttribute("src", iconURL);
+        let dayTemp = document.createElement("p");
+        dayTemp.textContent = "High: " + maxTemp + " Low: " + minTemp;
+        let dayWind = document.createElement("p");
+        dayWind.textContent = "Wind: " + wind;
+        let dayHumidity = document.createElement("p");
+        dayHumidity.textContent = "Humidity: " + humidity;
+
+        //appending the elements to the page
+        dayContainer.appendChild(dayHeader);
+        dayContainer.appendChild(dayIcon);
+        dayContainer.appendChild(dayTemp);
+        dayContainer.appendChild(dayWind);
+        dayContainer.appendChild(dayHumidity);
+        forecastDisplay.appendChild(dayContainer);
+
+    });
+
+}
+
+function getWind(day){
+    return day.reduce((max, p) => p.wind.speed > max ? p.wind.speed : max, day[0].wind.speed);
+}
+
+function getHumidity(day){
+    return day.reduce((max, p) => p.main.humidity > max ? p.main.humidity : max, day[0].main.humidity);
+}
+
+function getMax(day){
+    return day.reduce((max, p) => p.main.temp > max ? p.main.temp : max, day[0].main.temp);
+}
+
+function getMin(day){
+    return day.reduce((min, p) => p.main.temp < min ? p.main.temp : min, day[0].main.temp);
+}
+
+displayRecentSearches();

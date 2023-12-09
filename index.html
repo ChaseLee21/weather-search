@@ -14,16 +14,23 @@
     </header>
     <main class="container-fluid m-2">
         <div class="row">
-            <aside class="card m-2 col">
-                <h2>Search for a City</h2>
-                <form>
-                    <input type="text" id="city" name="city" placeholder="City Name">
-                    <input id="search" type="submit" value="Search">
-                </form>
+            <aside class="card m-2 col d-flex flex-column">
+                <div>
+                    <h2>Search for a City</h2>
+                    <form class="d-flex mb-2">
+                        <input type="text" id="city" name="city" placeholder="City Name" class="form-control">
+                        <input id="search" type="submit" value="Search" class="btn btn-primary ms-1">
+                    </form>
+                </div>
+                <div>
+                    <h2>Recent Searches:</h2>
+                    <ul id="recentSearches">
+                    </ul>
+                </div>
             </aside>
             <section class="card m-2 col-8">
-                <h2>City</h2>
-                <div id="forecastDisplay">
+                <h2 id="cityName"></h2>
+                <div id="forecastDisplay" class="d-flex flex-row flex-wrap">
                  
                 </div>
             </section>
