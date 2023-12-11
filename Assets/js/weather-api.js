@@ -7,11 +7,10 @@ const recentSearchesContainer = document.getElementById("recentSearches");
 let city = "";
 let query = "";
 let days = [[], [], [], [], []];
-
 searchBtn.addEventListener("click", async function (event) {
     event.preventDefault();
-    days = await getWeather(setQuery());
-    displayWeather(days);
+    await getWeather(setQuery());
+    displayWeather();
     document.getElementById("cityName").innerHTML = cityInput.value.trim();
     saveSearch(cityInput.value.trim());
 });
@@ -31,19 +30,18 @@ function setQuery() {
 // 5 days, 8 segments per day
 async function getWeather(query) {
     await fetch(query)
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (segments) {
-            let dayCount = 0;
-            days = [[], [], [], [], []];
-            segments.list.forEach((segment) => {
-                days[dayCount].push(segment);
-                if (createDateObject(segment.dt_txt).time == "21:00:00") dayCount++;
-            });
-            return days;
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (segments) {
+        let dayCount = 0;
+        days = [[], [], [], [], []];
+        segments.list.forEach((segment) => {
+            if (dayCount < 5) days[dayCount].push(segment);
+            if (createDateObject(segment.dt_txt).time == "21:00:00") dayCount++;
         });
-    }
+    });
+}
 
 // date/time string => {day: day, time: time}
 function createDateObject(dateString) {
@@ -55,7 +53,7 @@ function createDateObject(dateString) {
 }
 
 // input: days[day][segment]
-function displayWeather(days) {
+function displayWeather() {
     forecastDisplay.innerHTML = "";
     days.forEach(day => {
         let maxTemp = Math.floor(getMax(day)); 
@@ -132,7 +130,7 @@ function displaySearches(search) {
     searchEl.addEventListener("click", async function (event) {
         event.preventDefault();
         cityInput.value = search;
-        days = await getWeather(setQuery());
+        await getWeather(setQuery());
         displayWeather();
         document.getElementById("cityName").innerHTML = cityInput.value.trim();
         saveSearch(cityInput.value.trim());
