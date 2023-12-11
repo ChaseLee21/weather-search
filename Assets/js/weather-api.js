@@ -6,7 +6,6 @@ const forecastDisplay = document.getElementById("forecastDisplay");
 const recentSearchesContainer = document.getElementById("recentSearches");
 let city = "";
 let query = "";
-let query = "";
 let days = [[], [], [], [], []];
 
 searchBtn.addEventListener("click", async function (event) {
@@ -31,24 +30,12 @@ function setQuery() {
 // returns: days[day][segment]
 // 5 days, 8 segments per day
 async function getWeather(query) {
-// api call to openweathermap.org
-// input: api query
-// returns: days[day][segment]
-// 5 days, 8 segments per day
-async function getWeather(query) {
     await fetch(query)
         .then(function (response) {
             return response.json();
         })
         .then(function (segments) {
-        .then(function (segments) {
             let dayCount = 0;
-            days = [[], [], [], [], []];
-            segments.list.forEach((segment) => {
-                days[dayCount].push(segment);
-                if (createDateObject(segment.dt_txt).time == "21:00:00") dayCount++;
-            });
-            return days;
             days = [[], [], [], [], []];
             segments.list.forEach((segment) => {
                 days[dayCount].push(segment);
@@ -58,7 +45,6 @@ async function getWeather(query) {
         });
     }
 
-// date/time string => {day: day, time: time}
 // date/time string => {day: day, time: time}
 function createDateObject(dateString) {
     let date = dateString.split(" ");
