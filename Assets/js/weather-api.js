@@ -1,84 +1,71 @@
-//api variables
 const apikey = "fa4a15873725d3e5be6c755a8f395ec9";
 const apiURL = "https://api.openweathermap.org/data/2.5/forecast"
-
-//html variables
 const cityInput = document.getElementById("city");
 const searchBtn = document.getElementById("search");
 const forecastDisplay = document.getElementById("forecastDisplay");
-
-//query variables
 let city = "";
-let query = apiURL + "?q=" + city + "&appid=" + apikey;
-
-//api data variables
+let query = "";
 let days = [[], [], [], [], []];
 
 searchBtn.addEventListener("click", async function (event) {
     event.preventDefault();
-    query = setQuery();
-    await getWeather();
+    days = await getWeather(setQuery());
     displayForecast();
     document.getElementById("cityName").innerHTML = cityInput.value.trim();
     saveSearch(cityInput.value.trim());
-    displayRecentSearches();
 });
 
+// input: user input from the city input field
+// returns: api query
 function setQuery() {
     city = cityInput.value.trim();
     return apiURL + "?q=" + city + "&appid=" + apikey + "&units=imperial";
 }
 
-async function getWeather() {
-    console.log(query);
+// api call to openweathermap.org
+// input: api query
+// returns: days[day][segment]
+// 5 days, 8 segments per day
+async function getWeather(query) {
     await fetch(query)
         .then(function (response) {
             return response.json();
         })
-        .then(function (data) {
-            // keeps track of what day we are on
+        .then(function (segments) {
             let dayCount = 0;
-
-            // loop through all the data returned from the api
-            for (let i = 0; i < data.list.length; i++) {
-                // stores the current segment of the day we are on (3 hour segment)
-                let segmentOfDay = data.list[i];
-                // stores an object which holds the date and the time of the date we are on
-                let date = createDateObject(segmentOfDay.dt_txt);
-                // pushes the segment of the day into the array based on what day it is
-                days[dayCount].push(segmentOfDay);
-                // checks if its the last segment of the day
-                if (date.time == "21:00:00") {
-                    // if it is the last segment of the day, increment the day count
-                    dayCount++;
-                }
-            }
+            days = [[], [], [], [], []];
+            segments.list.forEach((segment) => {
+                days[dayCount].push(segment);
+                if (createDateObject(segment.dt_txt).time == "21:00:00") dayCount++;
+            });
+            return days;
         });
     }
 
-// seperates a date and time string into a variable that holds the day and the time
+// date/time string => {day: day, time: time}
 function createDateObject(dateString) {
-    // splits the date and time string into an array
     let date = dateString.split(" ");
-    // stores the day and time into variables
     let day = date[0];
     let time = date[1];
-    // returns an object with the day and time
     return {
         day : day,
         time : time
     };
 }
 
+// displays the recent searches from local storage as buttons
 function displayRecentSearches() {
+    // gets the recent searches from local storage
     let recentSearches = JSON.parse(localStorage.getItem("recentSearches"));
     let recentSearchesContainer = document.getElementById("recentSearches");
     recentSearchesContainer.innerHTML = "";
     if (recentSearches) {
+        // generates button for each recent search
         recentSearches.forEach(search => {
             let searchEl = document.createElement("button");
             searchEl.setAttribute("class", "btn btn-secondary m-1");
             searchEl.textContent = search;
+            // adds event listener to each button
             searchEl.addEventListener("click", async function (event) {
                 event.preventDefault();
                 cityInput.value = search;
@@ -92,6 +79,7 @@ function displayRecentSearches() {
     }
 }
 
+//saves the users search to local storage
 function saveSearch(search) {
     let recentSearches = JSON.parse(localStorage.getItem("recentSearches"));
     if (!recentSearches) {
@@ -101,6 +89,7 @@ function saveSearch(search) {
         recentSearches.push(search);
     }
     localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+    displayRecentSearches();
 }
 
 function displayForecast() {
